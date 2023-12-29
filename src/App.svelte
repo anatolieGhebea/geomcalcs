@@ -1,30 +1,73 @@
 <script>
-    let name = 'world';
-    let count = 0;
+    import { onMount } from 'svelte';
 
-    function incerement() {
-        count += 1;
+    let tabs = [
+        { name: 'trapezium', component: 'Trapezium' },
+        // { name: 'triangle', component: 'Triangle' },
+    ]
+
+    let selectedTab = null;
+
+    function selectTab(tab) {
+        selectedTab = tab.name;
+        import(`./${tab.name}/${tab.component}.svelte`).then(module => {
+            const Component = module.default;
+            const target = document.querySelector('.container');
+            target.innerHTML = '';
+            new Component({ target, props: { tab } });
+        });
     }
 
-    function decrement() {
-        count -= 1;
-    }
-
-    function reset() {
-        count = 0;
-    }
-
+    onMount(() => {
+        selectTab(tabs[0]);
+    });
+    
 </script>
 
-<main>
-    <h1>Hello {name}!</h1>
-    <p>Local project is up and running!</p>
+<main class="page">
+    <div class="tabs">
+        {#each tabs as tab}
+            <button
+                class="tab"
+                class:active={tab.name === selectedTab}
+                on:click={() => selectTab(tab)}
+            >
+                {tab.name}
+            </button>
+        {/each}
+    </div>
 
-    <div>
-        Counter:
-        <button on:click={decrement}>-</button>
-        <span>{count}</span>
-        <button on:click={incerement}>+</button>
-        <button on:click={reset}>Reset</button>
+    <div class="container">
+
     </div>
 </main>
+
+<style>
+    .page {
+        /* max-width: 900px; */
+    }
+    .tabs {
+        widows: 100%;
+        display: flex;
+        justify-content: start;
+        border-bottom: 1px solid #ccc;
+    }
+    .tab {
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+        border-bottom: 2px solid #333;
+        background-color: #ccc;
+    }
+
+    .container {
+        padding: 0 1rem;
+    }
+</style>

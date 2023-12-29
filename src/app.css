@@ -1,0 +1,28 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    position: relative;
+}
+* {
+    box-sizing: border-box;
+}
+.t-fade {
+    opacity: 0.75;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.data-table {
+    
+}
+
+.data-table > tr > td {
+    padding: 0.5rem;
+}
+
+.data-table > tr > td > input {
+    max-width: 7ch;
+}
