@@ -6,6 +6,8 @@ html, body {
 }
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 .t-fade {
     opacity: 0.75;
@@ -25,4 +27,37 @@ html, body {
 
 .data-table > tr > td > input {
     max-width: 7ch;
+}
+
+
+.mt-1 {
+    margin-top: .25rem;
+}
+.mt-2 {
+    margin-top: .5rem;
+}
+.mt-3 {
+    margin-top: .75rem;
+}
+.mt-4 {
+    margin-top: 1rem;
+}
+.mt-5 {
+    margin-top: 1.5rem;
+}
+
+.mb-1 {
+    margin-bottom: .25rem;
+}
+.mb-2 {
+    margin-bottom: .5rem;
+}
+.mb-3 {
+    margin-bottom: .75rem;
+}
+.mb-4 {
+    margin-bottom: 1rem;
+}
+.mb-5 {
+    margin-bottom: 1.5rem;
 }

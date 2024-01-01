@@ -199,16 +199,7 @@
 </script>
 
 <div>
-    <div class="d-flex" style="justify-content: space-between; align-items: center">
-        <h1>trapezium</h1>
-        <div>
-            <button on:click={resetValues} class="danger">
-                reset values
-            </button>
-        </div>
-    </div>
-    <div>
-        <h4 style="margin: 0">Input params:</h4>
+    <div class="mt-4">
         <table class="data-table">
             <tr>
                 <td>
@@ -300,11 +291,18 @@
             </tr>
         </table>
     </div>
+    <div class="mt-3 d-flex" style="justify-content: flex-end;">
+        <button on:click={resetValues} class="danger">
+            reset values
+        </button>
+    </div>
+    <h4 class="mt-5">Preview:</h4>
     <div style="overflow: auto;">
         <div class="canvas" style="width: {draw_width}px;">
             <canvas bind:this={canvas} width={draw_width} height={draw_height} />
         </div>
     </div>
+
 </div>
 
 <style>

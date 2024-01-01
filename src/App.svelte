@@ -45,6 +45,7 @@
 <style>
     .page {
         /* max-width: 900px; */
+        overflow: auto;
     }
     .tabs {
         widows: 100%;
