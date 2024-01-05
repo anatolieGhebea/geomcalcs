@@ -2,7 +2,8 @@
     import { onMount } from 'svelte';
 
     let tabs = [
-        { name: 'trapezium', component: 'Trapezium' },
+        { label: 'Trapezium', name: 'trapezium', component: 'Trapezium' },
+        { label: '1DCutOpt', name: '1dcutopt', component: '1DCutOpt' },
         // { name: 'triangle', component: 'Triangle' },
     ]
 
@@ -19,7 +20,7 @@
     }
 
     onMount(() => {
-        selectTab(tabs[0]);
+        selectTab(tabs[1]);
     });
     
 </script>
@@ -32,7 +33,7 @@
                 class:active={tab.name === selectedTab}
                 on:click={() => selectTab(tab)}
             >
-                {tab.name}
+                {tab.label}
             </button>
         {/each}
     </div>
