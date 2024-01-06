@@ -13,6 +13,8 @@
         { name: 'default', len: 6500, default_loss: 100 }
     ]
 
+    let selectedCombinationGroup = null;
+
     function addGroup() {
         const _groupName = prompt("Enter your input:");
 
@@ -66,6 +68,7 @@
     }
 
     let linesBySet = {};
+    let parametersBySet = {};
     // save to localStorage
     $: syncLocalStorage(groups);
     $: updateLinesBySet(groups);
@@ -79,6 +82,7 @@
 
     function updateLinesBySet(_groups) {
         // matrix_map = [];
+        selectedCombinationGroup = null;
         flattened_map = [];
         grouped_map = [];
         linesBySet = {};
@@ -86,6 +90,7 @@
 
         // console.log('updateLinesBySet', _groups);
         let _ns = {};
+        let _perimeters_by_set = {};
         _groups.forEach(gr => {
             let set_groups = gr.getAllLineItemsGroupedBySet();
             // console.log('sets', set_groups);
@@ -94,6 +99,19 @@
                 // console.log('set_key', set_groups[set_key]);
                 if( !_ns[set_key] ) _ns[set_key] = [];
                 _ns[set_key] = [..._ns[set_key], ...set_groups[set_key]];
+
+
+                if(_perimeters_by_set[set_key] === undefined){
+                    _perimeters_by_set[set_key] = [];
+                }
+
+                if( set_groups[set_key].length % 4 == 0 ){
+                    // at least 4 lines are necessary to calculate the perimeter
+                    let _perimeter = set_groups[set_key].reduce((acc, cur) => { return acc + cur.len; }, 0);
+                    _perimeters_by_set[set_key] = ''+_perimeter+'';
+                } else {
+                    _perimeters_by_set[set_key] = '--';
+                }
             });
             
         });
@@ -104,15 +122,8 @@
             _ns[set_key] = _ns[set_key].sort((a, b) => a.len - b.len);
         });
         
-        // Object.keys(_ns).forEach(set_key => {
-        //     _ns[set_key] = _ns[set_key].map((lineItem, index) => {
-        //         lineItem.name = lineItem.name + (index+1);
-        //         return lineItem;
-        //     });
-        // });
-        
-
         linesBySet = _ns;
+        parametersBySet = _perimeters_by_set;
     }
 
     function getSetValues(_set_name) {
@@ -272,6 +283,7 @@
         // filter out groups that do no cover all lines
         grouped = grouped.filter(group => group.all_lines.length == _lineItems.length);
         grouped = filterOutEquivalents(grouped);
+        grouped = filteOnlyMinPieces(grouped);
 console.log('setting groups', grouped.length);
         grouped_map = grouped;
 
@@ -304,25 +316,22 @@ console.log('setting groups', grouped.length);
         return _nwgroups;
     }
 
-    // function calculateCoordinates(_required_lines, i, _lineItemsLength){
-    //     // 1 element plus extra required_lines elements, in case of current_combo == 2, 1 element plus 1 extra element 
-    //     if( _required_lines > _lineItemsLength - 1 ) return [];
+    function filteOnlyMinPieces(_groups){
+        let _nwgroups = [];
+        let min_pieces = null;
 
-    //     coordinates = [];
-    //     if( i == 0 ){
-    //         for (let j= i+1; j <= _required_lines; j++ ){
-    //             coordinates.push(j);
-    //         }
-    //     } else if ( i == _lineItemsLength - 1 ){
-    //         // in last position
-    //         for (let j= i-1; j >= i-_required_lines; j-- ){
-    //             coordinates.push(j);
-    //         } 
-    //     } else {
-    //         // in the middle 
+        // find min pieces
+        for(let i = 0; i < _groups.length; i++){
+            let _len = _groups[i].elements.length;
+            if( min_pieces === null ) min_pieces = _len;
+            if( _len < min_pieces ) min_pieces = _len;
+        }
 
-    //     }
-    // }
+        // fiter only groups with min length
+        _nwgroups = _groups.filter(group => group.elements.length == min_pieces);
+        return _nwgroups;
+    }
+
     function calculateCombinations(elements, k){
 
         const result = [];
@@ -343,6 +352,13 @@ console.log('setting groups', grouped.length);
         backtrack([], 0);
         return result;
     }
+
+    
+    function setSelectedCombinationGroup(_group){
+        console.log('_group', _group);
+        selectedCombinationGroup = _group;
+        // groups = [];
+    };
 
     onMount(() => {
         // load from localStorage
@@ -446,7 +462,30 @@ console.log('setting groups', grouped.length);
                                     <td class="px-1">{getSetUsabeLen(setGroupKey)-lineItem.tot_len} mm</td>
                                 </tr>
                             {/each}
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
                         </table>
+                    </div>
+                    <div>
+                        <div>
+                            Total Elements: {linesBySet[setGroupKey].length}
+                        </div>
+                        <div>
+                            Total Angles: { Math.floor(linesBySet[setGroupKey].length / 2 ) }
+                        </div>
+                    </div>
+                    <div>
+                        {#if parametersBySet[setGroupKey] !== undefined}
+                            <div>
+                               Total Perimeter: {parametersBySet[setGroupKey]} mm
+                            </div>
+                        {/if}
                     </div>
                 </div>
             {/each}
@@ -460,28 +499,8 @@ console.log('setting groups', grouped.length);
                 <span>calculating...</span>
             {/if}
         </div>
-        <!-- <div>
-            <table>
-                {#each matrix_map as row, row_index}
-                    <tr>
-                        {#each row as col, col_index}
-                            {#if !col}
-                                <td></td>
-                            {:else}
-                                <td class="px-1 py-1 cell-bg-{ col.fits ? 'success':'danger' } ">
-                                    { col.included_lines.join(',') } [ 
-                                        <span class="">{col.used_len}</span>/
-                                        <span class="text-danger">{col.leftover}</span>
-                                    ]mm
-                                </td>
-                            {/if}
-                        {/each}
-                    </tr>
-                {/each}
-            </table>
-        </div> -->
         <div>
-            {#if flattened_map.length > 0 && false}
+            {#if flattened_map.length > 0 && false }
                 <div>
                     <h3 class="mt-2 mb-2"> List</h3>
                 </div>      
@@ -505,13 +524,26 @@ console.log('setting groups', grouped.length);
         <div>
             {#if grouped_map.length > 0}
                 <div>
-                    <h3 class="mt-2 mb-2"> List</h3>
+                    <h3 class="mt-2 mb-2"> { selectedCombinationGroup ? 'Selected cut disposition':'List' } </h3>
                 </div>      
                 <div>
                     <table>
-                        {#each grouped_map as group }
+                        {#if !selectedCombinationGroup}
+                            {#each grouped_map as group }
+                                <tr on:click={() => setSelectedCombinationGroup(group)}>
+                                    {#each group.elements as elem}
+                                        <td class="px-1 py-1 cell-bg-success">
+                                            { elem.included_lines.join(',') } [ 
+                                                <span class="">{elem.used_len}</span>/
+                                                <span class="text-danger">{elem.leftover}</span>
+                                            ]mm
+                                        </td>
+                                    {/each}
+                                </tr>
+                            {/each}
+                        {:else}
                             <tr>
-                                {#each group.elements as elem}
+                                {#each selectedCombinationGroup.elements as elem}
                                     <td class="px-1 py-1 cell-bg-success">
                                         { elem.included_lines.join(',') } [ 
                                             <span class="">{elem.used_len}</span>/
@@ -520,9 +552,8 @@ console.log('setting groups', grouped.length);
                                     </td>
                                 {/each}
                             </tr>
-                        {/each  }
-                    </table>
-                            
+                        {/if}
+                    </table> 
                 </div>
             {/if}
         </div>
