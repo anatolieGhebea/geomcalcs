@@ -1,6 +1,8 @@
 <script>
     import { onMount } from 'svelte';
     import { Group, GroupItem, LineItem } from '../mixins/structs.js';
+
+    let calculation_in_progress = false;
     // of type Group
     let groups = [];
     let mounted = false;
@@ -8,7 +10,7 @@
     let flattened_map = [];
     let grouped_map = [];
     const availableSets = [
-        { name: 'default', len: 6500, default_loss: 200 }
+        { name: 'default', len: 6500, default_loss: 100 }
     ]
 
     function addGroup() {
@@ -26,7 +28,13 @@
             set: 'default',
             len: 1000, 
         });
+        let _ngi2 = new GroupItem({ 
+            name: _groupName + "_L",
+            set: 'default',
+            len: 1000, 
+        });
         _ng.addItem(_ngi);
+        _ng.addItem(_ngi2);
 
         // add to groups
         groups = [...groups, _ng];
@@ -120,6 +128,7 @@
     }
 
     function calculate(){
+        calculation_in_progress = true;
         Object.keys(linesBySet).forEach(set_key => {
             let _lineItems = linesBySet[set_key];
             let _set = getSetValues(set_key);
@@ -129,6 +138,7 @@
             };
             performCalc(_lineItems, _set);
         });
+        calculation_in_progress = false;
     }
 
     function performCalc(_lineItems, _set = { name: 'default', len: 6500, default_loss: 200 } ) {
@@ -170,15 +180,15 @@
             let max_combos = _lineItems.length - 1;
             // max_combos = 2;
             for (let current_combo = 2; current_combo <= max_combos; current_combo++) {
-                console.log('current_combo', current_combo, max_combos);
+                // console.log('current_combo', current_combo, max_combos);
                 
                 let _list = calculateCombinations(_lineItems, current_combo);
-                console.log('_list', _list);
+                // console.log('_list', _list);
                 if(!_list || _list.length == 0) continue;
                 
                 for( let _ind = 0; _ind < _list.length; _ind++ ){
                     let listItems = _list[_ind];
-                    console.log('listItems', listItems);
+                    // console.log('listItems', listItems);
                     let _l1 = listItems[0];
                     let _obj = {
                         included_lines: [_l1.name],
@@ -261,7 +271,8 @@
 
         // filter out groups that do no cover all lines
         grouped = grouped.filter(group => group.all_lines.length == _lineItems.length);
-
+        grouped = filterOutEquivalents(grouped);
+console.log('setting groups', grouped.length);
         grouped_map = grouped;
 
     }
@@ -269,6 +280,28 @@
     function fitsInGroup(elem, group){
         let itersects = group.all_lines.filter(line => elem.included_lines.includes(line));
         return itersects.length == 0;
+    }
+
+    function filterOutEquivalents(_groups){
+        let present = [];
+        let _nwgroups = [];
+
+        for(let i = 0; i < _groups.length; i++){
+            let k = 'k_';
+            let elems =  _groups[i].elements;
+            for(let j=0; j < elems.length; j++){
+                k += '_'+elems[j].leftover
+            }
+            // console.log('k', k);
+            if( present.includes(k) ){
+                continue;
+            }
+            present.push(k);
+            _nwgroups.push(_groups[i]);
+        }
+
+        console.log('done filtering......');
+        return _nwgroups;
     }
 
     // function calculateCoordinates(_required_lines, i, _lineItemsLength){
@@ -423,6 +456,9 @@
         <h3 class="mt-2 mb-2">Calculation</h3>
         <div>
             <button on:click={() => calculate()}>calc</button>
+            {#if calculation_in_progress}
+                <span>calculating...</span>
+            {/if}
         </div>
         <!-- <div>
             <table>
@@ -445,7 +481,7 @@
             </table>
         </div> -->
         <div>
-            {#if flattened_map.length > 0}
+            {#if flattened_map.length > 0 && false}
                 <div>
                     <h3 class="mt-2 mb-2"> List</h3>
                 </div>      

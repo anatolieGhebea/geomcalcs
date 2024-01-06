@@ -24,7 +24,7 @@ class GroupItem {
      * @param {number} cut_loss // in mm
      * @param {number} cuts 
      */
-    constructor({ id, name = 'L', set, len, quantity = 2, cut_loss = 8, cuts = 2 }) {
+    constructor({ id, name = 'L', set, len, quantity = 2, cut_loss = 4, cuts = 2 }) {
         this.id = id ?? 'gi_'+Math.random().toString(36).substring(2);
         this.name = name;
         this.set = set;
