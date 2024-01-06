@@ -533,10 +533,17 @@ console.log('setting groups', grouped.length);
                                 <tr on:click={() => setSelectedCombinationGroup(group)}>
                                     {#each group.elements as elem}
                                         <td class="px-1 py-1 cell-bg-success">
-                                            { elem.included_lines.join(',') } [ 
-                                                <span class="">{elem.used_len}</span>/
-                                                <span class="text-danger">{elem.leftover}</span>
-                                            ]mm
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    { elem.included_lines.join(',').substring(0, 6) }... 
+                                                </div>
+                                                <div>
+                                                    [ 
+                                                        <span class="">{elem.used_len}</span>/
+                                                        <span class="text-danger">{elem.leftover}</span>
+                                                    ]mm
+                                                </div>
+                                            </div>
                                         </td>
                                     {/each}
                                 </tr>
