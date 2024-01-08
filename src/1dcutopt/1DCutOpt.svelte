@@ -140,17 +140,26 @@
 
     function calculate(){
         calculation_in_progress = true;
-        Object.keys(linesBySet).forEach(set_key => {
-            let _lineItems = linesBySet[set_key];
-            let _set = getSetValues(set_key);
-            if( !_set ) {
-                alert('Set not found');
-                return;
-            };
-            performCalc(_lineItems, _set);
-        });
-        calculation_in_progress = false;
+        // neccessary to wait for the DOM to update the calculation_in_progress
+        const wait = setInterval(() => {
+            for (let i = 0; i < Object.keys(linesBySet).length; i++){
+                let set_key = Object.keys(linesBySet)[i];
+                let _lineItems = linesBySet[set_key];
+                let _set = getSetValues(set_key);
+                if( !_set ) {
+                    calculation_in_progress = false;
+                    alert('Set not found');
+                    return;
+                };
+                performCalc(_lineItems, _set);
+            }
+    
+            calculation_in_progress = false;
+            clearInterval(wait);
+        }, 100);
     }
+
+    // $: console.log('calculation_in_progress', calculation_in_progress);
 
     function performCalc(_lineItems, _set = { name: 'default', len: 6500, default_loss: 200 } ) {
         if( !Array.isArray(_lineItems) || _lineItems.length == 0 ) return;
@@ -493,7 +502,7 @@ console.log('setting groups', grouped.length);
     </div>
     <div>
         <h3 class="mt-2 mb-2">Calculation</h3>
-        <div>
+        <div class="mb-4">
             <button on:click={() => calculate()}>calc</button>
             {#if calculation_in_progress}
                 <span>calculating...</span>
