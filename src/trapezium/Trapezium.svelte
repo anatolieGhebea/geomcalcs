@@ -1,28 +1,38 @@
 <script>
-    import { onMount } from 'svelte';
+    import { onMount } from "svelte";
 
+    
     // reset values:
     const min_angle = 1;
     const max_angle = 90;
-    const r_Abl = 45;
-    const r_Abr = 45;
+    const left_anagle = 45;
+    const right_angle = 45;
+
     const fixed_angle = 90;
-    const min_top_width = 1;
-    const min_height = 1;
+    // const min_top_width = 0;
+    const min_thickness = 1;
+    let MinLongBaseWidth = 0;
 
+    
     // input values
-    let Abl = r_Abl;
-    let Abr = r_Abr;
-    let Twidth = 100;
+    let Abl = left_anagle;
+    let Abr = right_angle;
+    let Bwidth = 1000;
     let Theight = 50;
-
+    let mounted = false;
+    
     $: Atl = getAtl(Abl);
     $: Atr = getAtr(Abr);
     $: BLwidth = getBLwidth(Theight, Atl);
     $: BRwidth = getBRwidth(Theight, Atr);
-    $: HypoLeft = getHypoLeft(Theight, Atl);
-    $: HypoRight = getHypoRight(Theight, Atr);
-    $: Bwidth = getBwidth(Twidth, BLwidth, BRwidth);
+    // $: HypoLeft = getHypoLeft(Theight, Atl);
+    // $: HypoRight = getHypoRight(Theight, Atr);
+    $: {
+        MinLongBaseWidth =  parseFloat((BLwidth + BRwidth).toFixed(2));
+    }
+    // $: Bwidth = getBwidth(Twidth, BLwidth, BRwidth);
+    $: Twidth = getTwidth(Bwidth, BLwidth, BRwidth);
+    $: syncLocalStorage(Abl, Abr, Bwidth, Theight)
 
     function getAtl(_Abl) {
         if(_Abl < min_angle) Abl = _Abl = min_angle;
@@ -37,33 +47,34 @@
         return 180 - _Abr - fixed_angle;
     }
 
-    function getBwidth(_Twidth, _BLwidth, _BRwidth) {
-        if(_Twidth < min_top_width) Twidth = _Twidth = min_top_width;
-        console.log(_BLwidth, _BRwidth);
+    function getTwidth(_Bwidth, _BLwidth, _BRwidth) {
+        if(_Bwidth < MinLongBaseWidth) _Bwidth = MinLongBaseWidth;
+
+        // console.log(_BLwidth, _BRwidth);
         if( isNaN(_BLwidth) ) _BLwidth = 0;
         if( isNaN(_BRwidth) ) _BRwidth = 0;
 
-        return _Twidth+_BLwidth+_BRwidth;
+        return _Bwidth-_BLwidth-_BRwidth;
     }
 
     function getBLwidth(_Theight, _Atl) {
-        if(_Theight < min_height) Theight = _Theight = min_height;
+        if(_Theight < min_thickness) Theight = _Theight = min_thickness;
         return _Theight * calcTan(_Atl);
     }
 
     function getBRwidth(_Theight, _Atr) {
-        if(_Theight < min_height) Theight = _Theight = min_height;
+        if(_Theight < min_thickness) Theight = _Theight = min_thickness;
         return _Theight * calcTan(_Atr);
     }
 
     function getHypoLeft(_Theight, _Atl) {
-        if(_Theight < min_height) Theight = _Theight = min_height;
+        if(_Theight < min_thickness) Theight = _Theight = min_thickness;
         if(_Atl == 0) return _Theight;
         return _Theight / calcSin(_Atl);
     }
 
     function getHypoRight(_Theight, _Atr) {
-        if(_Theight < min_height) Theight = _Theight = min_height;
+        if(_Theight < min_thickness) Theight = _Theight = min_thickness;
         return _Theight / calcSin(_Atr);
     }
 
@@ -85,242 +96,211 @@
     }
 
     function resetValues() {
-        Abl = r_Abl;
-        Abr = r_Abr;
-        Twidth = 100;
+        Abl = left_anagle;
+        Abr = right_angle;
+        Bwidth = 100;
         Theight = 50;
     }
 
     // monitor
-    $: console.log('Abl', Abl);
-    $: console.log('Abr', Abr);
-    $: console.log('Atl', Atl);
-    $: console.log('Atr', Atr);
-    $: console.log('Twidth', Twidth);
-    $: console.log('Theight', Theight);
-    $: console.log('BLwidth', BLwidth);
-    $: console.log('BRwidth', BRwidth);
-    $: console.log('Bwidth', Bwidth);
+    // $: console.log('Abl', Abl);
+    // $: console.log('Abr', Abr);
+    // $: console.log('Atl', Atl);
+    // $: console.log('Atr', Atr);
+    // $: console.log('Twidth', Twidth);
+    // $: console.log('Theight', Theight);
+    // $: console.log('BLwidth', BLwidth);
+    // $: console.log('BRwidth', BRwidth);
+    // $: console.log('Bwidth', Bwidth);
+    // $: console.log('MinLongBaseW', MinLongBaseWidth);
 
-    // draw values:
-    let canvas;
-    let draw_width = 900;
-    let draw_height = 250;
-    
+    function set2Vertical(){
+        Abl = 90;
+        Abr = 90;
+    }
+
+    function set2FortyFive(){
+        Abl = 45;
+        Abr = 45;
+    }
+
+    function setLeftFortyFive(){
+        Abl = 45;
+        Abr = 90;
+    }
+    function setRightFortyFive(){
+        Abl = 90;
+        Abr = 45;
+    }
+
+    function syncLocalStorage(_Abl, _Abr, _Bwidth, _Theight) {
+        if( !mounted ) return;
+
+        console.log('syncLocalStorage');
+        let _data = {
+            Abl: _Abl,
+            Abr: _Abr,
+            Bwidth: _Bwidth,
+            Theight: _Theight,
+        }
+        
+        localStorage.setItem('geocalcs_trapezium_data', JSON.stringify(_data));
+    }
+
     onMount(() => {
-        draw_width = window.innerWidth - 20;
-        const wait = setTimeout(() => {
-            updateCanvas(1);
-            clearTimeout(wait);
-        }, 100);
+        let _data = localStorage.getItem('geocalcs_trapezium_data');
+        if(_data) {
+            _data = JSON.parse(_data);
+            Abl = _data.Abl ?? left_anagle;
+            Abr = _data.Abr ?? right_angle;
+            Bwidth = _data.Bwidth ?? 100;
+            Theight = _data.Theight ?? 50;
+        }
+        mounted = true;
     });
 
-    $: updateCanvas(Bwidth);
-
-    function updateCanvas(_trigger) {
-        if( !canvas ) return;
-
-        let useHeight = Theight;
-        if( Theight < 50 ) useHeight = 50;
-
-        let useWidth = Twidth;
-        let useBlw = BLwidth;
-        let useBrw = BRwidth;
-        if( Twidth < 150 ) {
-            useWidth = 150;
-            useBlw = ((Bwidth/BLwidth) / 100) * useWidth;
-            useBrw = ((Bwidth/BRwidth) / 100) * useWidth;
-        }
-
-        let useBw = ( useBlw + useWidth + useBrw );
-        let multiplier = 1;
-        let multiplierH = 1;
-        if ( useBw > 5000 ) {
-            multiplier = 0.125;
-            multiplierH = 0.25;
-        } else if ( useBw > 2500 ) {
-            multiplier = 0.25;
-            multiplierH = 0.5;
-        } else if( useBw > 1000 ) {
-            multiplier = 0.5;
-            multiplierH = 0.75;
-        }  
-
-        const ctx = canvas.getContext('2d');
-        ctx.canvas.width = (useBw * multiplier);
-        console.log('updateCanvas', canvas.width, canvas.height);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        let margin = 5;
-
-        let x_Atl = useBlw * multiplier;
-        let y_Atl = margin;
-
-        let x_Abl = 0;
-        let y_Abl = (useHeight * multiplierH) + margin;
-
-        let x_Atr = (useBlw + useWidth) * multiplier;
-        let y_Atr = margin;
-
-        let x_Abr = useBw * multiplier;
-        let y_Abr = (useHeight * multiplierH) + margin;
-
-        ctx.beginPath();
-        ctx.setLineDash([]);
-        ctx.moveTo(x_Atl, y_Atl);
-        ctx.lineTo(x_Atr, y_Atr);
-        ctx.lineTo(x_Abr, y_Abr);
-        ctx.lineTo(x_Abl, y_Abl);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.setLineDash([2, 2]);
-
-        ctx.moveTo(x_Atl, y_Atl);
-        ctx.lineTo(x_Atl, (useHeight * multiplierH) + margin);
-
-        ctx.moveTo(x_Atr, y_Atr);
-        ctx.lineTo(x_Atr, (useHeight * multiplierH) + margin);
-        // ctx.closePath();
-        ctx.stroke();
-
-        ctx.font = "12px Arial";
-        ctx.fillText("Atl", x_Atl-10, y_Atl+25);
-        ctx.fillText("Atr", x_Atr-15, y_Atr+15);
-        ctx.fillText("Abl", x_Abl+7, y_Abl-5);
-        ctx.fillText("Abr", x_Abr-20, y_Abr-5);
-        ctx.fillText("Twidth", x_Atl+((x_Atr-x_Atl)/2)-20, y_Atl+15);
-        ctx.fillText("Bwidth", x_Abl+((x_Abr-x_Abl)/2)-20, y_Abl+30);
-        ctx.fillText("Blw", x_Abl+2, y_Abl+15);
-        ctx.fillText("Brw", x_Abr-40, y_Abr+15);
-        
-    }
 </script>
 
-<div>
+<div class="trapezium">
     <div class="mt-4">
+
         <table class="data-table">
             <tr>
-                <td>
-                    <div>Height <small class="t-fade">(spessore)</small></div>
-                    <div>
-                        <input type="number" id="Abl" bind:value={Theight} min="{min_height}" step="0.1" />mm
+                <td colspan="100%">
+                    <div class="angle_selection_wrappper">
+                        <button class="angle_selection_btn" on:click={set2Vertical}>90| |90</button>
+                        <button class="angle_selection_btn" on:click={setLeftFortyFive}>45\ |90</button>
+                        <button class="angle_selection_btn" on:click={set2FortyFive}>45\ /45</button>
+                        <button class="angle_selection_btn" on:click={setRightFortyFive}>90| /45</button>
                     </div>
+                </td>
+            </tr>     
+            <tr>
+                <td>
+                    Angle Left
+                </td>
+                <td>
+                    <input type="number" id="Abl" bind:value={Abl} min="{min_angle}" max="{max_angle}" step="0.5" />deg
+                </td>
+                <td class="t-fade">
+                    &nbsp;<small >(Blw)</small> {fomratNumber(BLwidth)} mm
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Angle Right
+                </td>
+                <td>
+                    <input type="number" id="Abr" bind:value={Abr} min="{min_angle}" max="{max_angle}" step="0.5" />deg
+                </td>
+                <td class="t-fade">
+                    &nbsp;<small>(Brw)</small> {fomratNumber(BRwidth)} mm
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div>Thickness <small class="t-fade">(height)</small></div>
+                </td>
+                <td>
+                    <input type="number" id="Abl" bind:value={Theight} min="{min_thickness}" step="0.5"/>mm
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    LongBaseWidth
                 </td>
                 <td>
                     <div>
-                        Abl <small class="t-fade">(Angle Base Left)</small>
-                    </div>
-                    <div>
-                        <input type="number" id="Abl" bind:value={Abl} min="{min_angle}" max="{max_angle}" step="0.1" />deg
+                        <input type="number" id="Bwidth" bind:value={Bwidth} step="1" />mm
+                       
                     </div>
                 </td>
                 <td>
+                    {#if (Bwidth < MinLongBaseWidth)}
+                        <small class="text-danger">(Min: {MinLongBaseWidth} mm)</small>
+                    {/if}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="100%" class="td-separator"></td>
+            </tr>
+            <tr>
+                <td colspan="100%" class="td-spacer"></td>
+            </tr>
+            <tr>
+                <td>
+                    ShortBaseWidth 
                     <div>
-                        Abr <small class="t-fade">(Angle Base Right)</small>
-                    </div>
-                    <div>
-                        <input type="number" id="Abr" bind:value={Abr} min="{min_angle}" max="{max_angle}" step="0.1" />deg
+                        <small class="t-fade">({Bwidth} - {BLwidth.toFixed(2)} - {BRwidth.toFixed(2)})</small>
                     </div>
                 </td>
+                <td></td>
+                <td class="text-right">
+                    <b>{fomratNumber(Twidth)}</b> mm
+                </td>    
             </tr>
             <tr>
                 <td></td>
-                <td>
-                    <div>
-                        Atl <small class="t-fade">(Angle Top Left)</small>
-                    </div> 
-                    <div>
-                        {Atl} deg
-                    </div>
-                </td>
-                <td>
-                    <div>
-                        Atr <small class="t-fade">(Angle Top Right)</small>
-                    </div>
-                    <div>
-                        {Atr} deg
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td>
-                    <div>
-                        Twidth
-                    </div> 
-                    <div>
-                        <input type="number" id="Twidth" bind:value={Twidth} min="{min_top_width}" step="0.1" />mm
-                    </div>
-                </td>
-                <td>
-                    <div>Blw <small class="t-fade">(Left Triangle Base)</small></div>
-                    <div>{fomratNumber(BLwidth)} mm</div>
-                </td>
-                <td>
-                    <div>Brw <small class="t-fade">(Right Triangle Base)</small></div>
-                    <div>{fomratNumber(BRwidth)} mm</div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div>
-                        Bwidth <small class="t-fade">(Twidth + Blw + Brw)</small>
-                    </div>
-                    <div>
-                        {fomratNumber(Bwidth)} mm
-                    </div>
-                </td>    
-                <td>
-                    <div>
-                        HypoLeft <small class="t-fade">(Theight / Sin(Atl))</small>
-                    </div>
-                    <div>
-                        {fomratNumber(HypoLeft)} mm
-                    </div>
-                </td>
-                <td>
-                    <div>
-                        HypoRight <small class="t-fade">(Theight / Sin(Atr))</small>
-                    </div>
-                    <div>
-                        {fomratNumber(HypoRight)} mm
-                    </div>
+                <td></td>
+                <td class="text-right">
+                    <button on:click={resetValues} class="reset">
+                        reset values
+                    </button>
                 </td>
             </tr>
         </table>
-    </div>
-    <div class="mt-3 d-flex" style="justify-content: flex-end;">
-        <button on:click={resetValues} class="danger">
-            reset values
-        </button>
-    </div>
-    <h4 class="mt-5">Preview:</h4>
-    <div style="overflow: auto;">
-        <div class="canvas" style="width: {draw_width}px;">
-            <canvas bind:this={canvas} width={draw_width} height={draw_height} />
-        </div>
-    </div>
 
+    </div>
 </div>
 
 <style>
-    /* canvas {
-		width: 100%;
-		height: 100%;
-	} */
-    .canvas {
-        margin-top: 2rem;
-        overflow: scroll;
-        min-width: 100%;
-        height: 254px;
-        display: flex;
-        justify-content: start;
-        align-items: center;
-        overflow: auto;
-        padding: 2px;
+    .trapezium {
+        font-size: 12px;
     }
 
+    .data-table {
+        width: 100%;
+        max-width: 500px;
+    }
+    .data-table input {
+        text-align: right;
+        max-width: 11ch;
+    }
 
+    .td-separator {
+        height: 1rem;
+        border-bottom: 2px dashed #ccc;
+    }
+    .td-spacer {
+        height: .5rem;
+    }
+    .angle_selection_wrappper {
+        widows: 100%;
+        /* padding: 1rem; */
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .angle_selection_btn {
+        padding: 0.5rem .15rem;
+        /* background: none; */
+        cursor: pointer;
+        font-weight: bold;
+        color: #333;
+        border: none;
+        border-bottom: 2px solid transparent;
+        flex-grow: 1;
+    }
+
+    .reset {
+        padding: 0.5rem .2rem;
+        background: rgba(220, 56, 72, 0.25);
+        cursor: pointer;
+        font-weight: bold;
+        color: #333;
+        border: none;
+        border-bottom: 2px solid transparent;
+        flex-grow: 1;
+    }
 </style>

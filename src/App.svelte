@@ -20,7 +20,7 @@
     }
 
     onMount(() => {
-        selectTab(tabs[1]);
+        selectTab(tabs[0]);
     });
     
 </script>
