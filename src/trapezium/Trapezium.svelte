@@ -273,6 +273,7 @@
     .data-table input {
         text-align: right;
         max-width: 11ch;
+        width: 100%;
     }
 
     .td-separator {
