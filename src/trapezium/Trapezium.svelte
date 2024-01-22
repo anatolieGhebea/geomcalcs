@@ -159,6 +159,14 @@
         mounted = true;
     });
 
+    function handleFocus(_event) {
+        const el = _event.currentTarget;
+        const wait = setTimeout(() => {
+            el.select();
+            clearTimeout(wait);
+        }, 25);
+        // event.currentTarget.select();
+    }
 </script>
 
 <div class="trapezium">
@@ -180,7 +188,7 @@
                     Angle Left
                 </td>
                 <td>
-                    <input type="number" id="Abl" bind:value={Abl} min="{min_angle}" max="{max_angle}" step="0.5" />deg
+                    <input type="number" id="Abl" bind:value={Abl} min="{min_angle}" max="{max_angle}" step="0.5" on:focus={handleFocus} />deg
                 </td>
                 <td class="t-fade">
                     &nbsp;<small >(Blw)</small> {fomratNumber(BLwidth)} mm
@@ -191,7 +199,7 @@
                     Angle Right
                 </td>
                 <td>
-                    <input type="number" id="Abr" bind:value={Abr} min="{min_angle}" max="{max_angle}" step="0.5" />deg
+                    <input type="number" id="Abr" bind:value={Abr} min="{min_angle}" max="{max_angle}" step="0.5" on:focus={handleFocus} />deg
                 </td>
                 <td class="t-fade">
                     &nbsp;<small>(Brw)</small> {fomratNumber(BRwidth)} mm
@@ -202,7 +210,7 @@
                     <div>Thickness <small class="t-fade">(height)</small></div>
                 </td>
                 <td>
-                    <input type="number" id="Abl" bind:value={Theight} min="{min_thickness}" step="0.5"/>mm
+                    <input type="number" id="Abl" bind:value={Theight} min="{min_thickness}" step="0.5" on:focus={handleFocus}/>mm
                 </td>
             </tr>
             <tr>
@@ -211,7 +219,7 @@
                 </td>
                 <td>
                     <div>
-                        <input type="number" id="Bwidth" bind:value={Bwidth} step="1" />mm
+                        <input type="number" id="Bwidth" bind:value={Bwidth} step="1" on:focus={handleFocus}/>mm
                        
                     </div>
                 </td>
